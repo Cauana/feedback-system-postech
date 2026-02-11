@@ -2,40 +2,27 @@ package com.feedback.functions;
 
 import com.feedback.model.Feedback;
 import com.feedback.service.FeedbackService;
-import com.microsoft.azure.functions.annotation.*;
-import com.microsoft.azure.functions.*;
-
-import java.util.Optional;
+import io.quarkus.funqy.Funq;
+import jakarta.inject.Inject;
+import org.jboss.logging.Logger;
 
 public class CreateFeedbackFunction {
 
-    private final FeedbackService service = new FeedbackService();
+    private static final Logger LOG = Logger.getLogger(CreateFeedbackFunction.class);
 
-    @FunctionName("createFeedback")
-    public HttpResponseMessage run(
-            @HttpTrigger(
-                    name = "req",
-                    methods = {HttpMethod.POST},
-                    authLevel = AuthorizationLevel.ANONYMOUS
-            )
-            HttpRequestMessage<Optional<Feedback>> request,
-            final ExecutionContext context
-    ) {
+    @Inject
+    FeedbackService service;
 
-        Feedback feedback = request.getBody().orElse(null);
-
+    @Funq("avaliacao")
+    public Feedback run(Feedback feedback) {
         if (feedback == null) {
-            return request.createResponseBuilder(HttpStatus.BAD_REQUEST)
-                    .body("Body inválido")
-                    .build();
+            throw new IllegalArgumentException("Body inválido");
         }
 
         Feedback result = service.processar(feedback);
 
-        context.getLogger().info("Feedback recebido: " + result.descricao);
+        LOG.info("Feedback recebido: " + result.descricao);
 
-        return request.createResponseBuilder(HttpStatus.CREATED)
-                .body(result)
-                .build();
+        return result;
     }
 }
