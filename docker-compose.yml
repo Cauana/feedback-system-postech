@@ -13,18 +13,19 @@ services:
       - db_data:/var/lib/postgresql/data
 
   # Descomente abaixo para rodar a aplicação via Docker Compose
-  # feedback-app:
-  #   build:
-  #     context: .
-  #     dockerfile: src/main/docker/Dockerfile.jvm
-  #   environment:
-  #     DB_URL: jdbc:postgresql://feedback-db:5432/feedback_db
-  #     DB_USER: user
-  #     DB_PASSWORD: password
-  #   ports:
-  #     - "8080:8080"
-  #   depends_on:
-  #     - feedback-db
+  feedback-app:
+     build:
+       context: .
+       dockerfile: src/main/docker/Dockerfile.jvm
+     environment:
+       DB_KIND: postgresql
+       DB_URL: jdbc:postgresql://feedback-db:5432/feedback_db
+       DB_USER: feedback_user
+       DB_PASSWORD: feedback_password
+     ports:
+       - "8080:8080"
+     depends_on:
+       - feedback-db
 
 volumes:
   db_data:
