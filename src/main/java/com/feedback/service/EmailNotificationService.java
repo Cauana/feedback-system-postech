@@ -6,6 +6,8 @@ import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import java.util.Optional;
 
 /**
  * EmailNotificationService - Implementação para produção
@@ -18,37 +20,49 @@ public class EmailNotificationService implements NotificationService {
     @Inject
     Mailer mailer;
     
-    private static final String EMAIL_ADMIN = "cauana.dias@hotmail.com";
-    private static final String EMAIL_FROM = "noreply@feedback-system.com";
+    @ConfigProperty(name = "notification.admin.email", defaultValue = "wellingtonfc@hotmail.com")
+    String adminEmail;
+    
+    @ConfigProperty(name = "quarkus.mailer.from")
+    Optional<String> emailFrom;
+    
+    @ConfigProperty(name = "quarkus.mailer.username")
+    Optional<String> emailUser;
     
     @Override
     public void notify(Feedback feedback) {
         if (feedback.nota <= 3) {
-            String subject = "ALERTA: Feedback Critico Recebido";
+            String subject = "ALERTA: Feedback Crítico Recebido";
             String body = criarCorpoNotificacaoCritica(feedback);
             
-            enviarEmail(EMAIL_ADMIN, subject, body);
+            enviarEmail(adminEmail, subject, body);
         }
     }
     
     @Override
     public void notifyReport(Report report) {
-        String subject = "Relatorio Semanal de Feedbacks - " + report.dataCriacao;
+        String subject = "Relatório Semanal de Feedbacks - " + report.dataCriacao;
         String body = criarCorpoRelatorio(report);
         
-        enviarEmail(EMAIL_ADMIN, subject, body);
+        enviarEmail(adminEmail, subject, body);
     }
     
     private void enviarEmail(String destinatario, String assunto, String corpo) {
         try {
+            String to = destinatario == null ? "" : destinatario.trim();
+            String from = emailFrom.filter(s -> !s.isBlank()).orElseGet(() -> emailUser.orElse("")).trim();
+            
             Mail mail = new Mail()
-                .setFrom(EMAIL_FROM)
-                .addTo(destinatario)
+                .addTo(to)
                 .setSubject(assunto)
                 .setHtml(corpo);
             
+            if (!from.isBlank()) {
+                mail.setFrom(from);
+            }
+            
             mailer.send(mail);
-            System.out.println("Email enviado com sucesso para: " + destinatario);
+            System.out.println("Email enviado com sucesso para: " + to);
         } catch (Exception e) {
             System.err.println("Erro ao enviar email: " + e.getMessage());
             e.printStackTrace();
@@ -72,7 +86,7 @@ public class EmailNotificationService implements NotificationService {
         html.append("<body>\n");
         html.append("<div class=\"container\">\n");
         html.append("<div class=\"header\">\n");
-        html.append("<h2>ALERTA: Feedback Critico</h2>\n");
+        html.append("<h2>ALERTA: Feedback Crítico</h2>\n");
         html.append("</div>\n");
         html.append("<div class=\"content\">\n");
         html.append("<div class=\"field\">\n");
@@ -84,7 +98,7 @@ public class EmailNotificationService implements NotificationService {
         html.append("<span style=\"color: red; font-weight: bold;\">").append(feedback.nota).append("/10</span>\n");
         html.append("</div>\n");
         html.append("<div class=\"field\">\n");
-        html.append("<span class=\"label\">Descricao:</span>\n");
+        html.append("<span class=\"label\">Descrição:</span>\n");
         html.append("<p>").append(feedback.descricao).append("</p>\n");
         html.append("</div>\n");
         html.append("<div class=\"field\">\n");
@@ -92,7 +106,7 @@ public class EmailNotificationService implements NotificationService {
         html.append("<span>").append(feedback.dataEnvio).append("</span>\n");
         html.append("</div>\n");
         html.append("<hr>\n");
-        html.append("<p><strong>Acao Necessaria:</strong> Este feedback foi marcado como critico e requer atencao imediata.</p>\n");
+        html.append("<p><strong>Ação Necessária:</strong> Este feedback foi marcado como crítico e requer atenção imediata.</p>\n");
         html.append("</div>\n");
         html.append("</div>\n");
         html.append("</body>\n");
@@ -122,7 +136,7 @@ public class EmailNotificationService implements NotificationService {
         html.append("<body>\n");
         html.append("<div class=\"container\">\n");
         html.append("<div class=\"header\">\n");
-        html.append("<h2>Relatorio Semanal de Feedbacks</h2>\n");
+        html.append("<h2>Relatório Semanal de Feedbacks</h2>\n");
         html.append("<p>Periodo: ").append(report.dataCriacao).append("</p>\n");
         html.append("</div>\n");
         html.append("<div class=\"content\">\n");
@@ -133,7 +147,7 @@ public class EmailNotificationService implements NotificationService {
         html.append("</div>\n");
         html.append("<div class=\"stat-box\">\n");
         html.append("<div class=\"stat-value\">").append(report.mediaNota).append("</div>\n");
-        html.append("<div class=\"stat-label\">Media de Notas</div>\n");
+        html.append("<div class=\"stat-label\">Média de Notas</div>\n");
         html.append("</div>\n");
         html.append("<div class=\"stat-box\">\n");
         html.append("<div class=\"stat-value\">").append(report.feedbacksCriticos).append("</div>\n");
