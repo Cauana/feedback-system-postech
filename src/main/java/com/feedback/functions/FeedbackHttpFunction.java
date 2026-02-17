@@ -20,6 +20,7 @@ public class FeedbackHttpFunction {
     @Inject
     private ObjectMapper mapper;
 
+
     @FunctionName("FeedbackHttpFunction")
     public HttpResponseMessage run(
             @HttpTrigger(name = "req",
