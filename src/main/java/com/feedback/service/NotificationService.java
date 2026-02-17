@@ -1,6 +1,7 @@
 package com.feedback.service;
 
 import com.feedback.model.Feedback;
+import com.feedback.model.Report;
 
 /**
  * NotificationService - Interface para enviar notificações

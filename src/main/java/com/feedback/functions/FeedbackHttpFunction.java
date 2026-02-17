@@ -6,10 +6,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.*;
 import com.microsoft.azure.functions.annotation.*;
 import io.quarkus.arc.Arc;
+import io.quarkus.funqy.Funq;
+
 import java.util.Optional;
 
 public class FeedbackHttpFunction {
-    @FunctionName("FeedbackHttpFunction")
+    @Funq("FeedbackHttpFunction")
     public HttpResponseMessage run(
             @HttpTrigger(name = "req",
                          methods = {HttpMethod.POST},
