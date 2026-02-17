@@ -1,7 +1,6 @@
 package com.feedback.service;
 
 import com.feedback.model.Feedback;
-import com.feedback.model.Report;
 
 /**
  * NotificationService - Interface para enviar notificações
@@ -10,12 +9,12 @@ import com.feedback.model.Report;
  * - Console (desenvolvimento)
  */
 public interface NotificationService {
-    
+
     /**
      * Envia notificação para feedback crítico
      */
     void notify(Feedback feedback);
-    
+
     /**
      * Envia notificação de relatório semanal aos administradores
      */

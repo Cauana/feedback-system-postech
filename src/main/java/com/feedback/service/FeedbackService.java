@@ -18,25 +18,25 @@ public class FeedbackService {
         feedback.dataEnvio = LocalDateTime.now();
         feedback.urgencia = feedback.nota <= 3;
         feedback.status = "PROCESSADO";
-        
+
         feedback.persist();
-        
+
         if (feedback.urgencia) {
             notificationService.notify(feedback);
             feedback.status = "NOTIFICADO";
         }
-        
+
         return feedback;
     }
 
     public List<Feedback> listarTodos() {
         return Feedback.listAll();
     }
-    
+
     public long contarTotal() {
         return Feedback.count();
     }
-    
+
     public long contarCriticos() {
         return Feedback.count("urgencia", true);
     }

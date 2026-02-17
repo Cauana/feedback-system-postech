@@ -1,0 +1,33 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "java",
+    "FUNCTIONS_EXTENSION_VERSION": "~4",
+    "WEBSITE_RUN_FROM_PACKAGE": "1",
+
+    "QUARKUS_DATASOURCE_DB_KIND": "postgresql",
+    "QUARKUS_DATASOURCE_USERNAME": "postech",
+    "QUARKUS_DATASOURCE_PASSWORD": "Fiap@2026",
+    "QUARKUS_DATASOURCE_JDBC_URL": "jdbc:postgresql://postgres-tech-db.postgres.database.azure.com:5432/postgres",
+
+    "QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION": "update",
+    "QUARKUS_HIBERNATE_ORM_LOG_SQL": "false",
+
+    "QUARKUS_HTTP_ROOT_PATH": "/api",
+
+    "QUARKUS_MAILER_FROM": "fdolzanes1@gmail.com",
+    "QUARKUS_MAILER_HOST": "smtp.gmail.com",
+    "QUARKUS_MAILER_PORT": "587",
+    "QUARKUS_MAILER_START_TLS": "REQUIRED",
+    "SMTP_USERNAME": "seu-email@gmail.com",
+    "SMTP_PASSWORD": "sua-senha-app",
+    "QUARKUS_MAILER_MOCK": "false",
+
+    "ADMIN_EMAIL": "admin@example.com"
+  },
+  "Host": {
+    "CORS": "*",
+    "CORSCredentials": false
+  }
+}
