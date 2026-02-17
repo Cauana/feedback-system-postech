@@ -8,9 +8,9 @@ import io.quarkus.arc.Arc;
 import io.quarkus.funqy.Funq;
 
 public class ReportTimerFunction {
-    @Funq("ReportTimerFunction")
+    @FunctionName("ReportTimerFunction")
     public void run(
-            @TimerTrigger(name = "timerInfo", schedule = "0 */1 * * * *")
+            @TimerTrigger(name = "timerInfo", schedule = "0 0 0 * * 6")
             String timerInfo,
             final ExecutionContext context) {
         ReportService reportService = Arc.container().instance(ReportService.class).get();

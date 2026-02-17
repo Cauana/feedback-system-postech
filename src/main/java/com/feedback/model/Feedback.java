@@ -1,5 +1,6 @@
 package com.feedback.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.quarkus.hibernate.orm.panache.PanacheEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,6 +21,7 @@ public class Feedback extends PanacheEntity {
     @Column(nullable = false)
     public boolean urgencia;
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @Column(name = "data_envio", nullable = false)
     public LocalDateTime dataEnvio;
     public String status; // NOVO, PROCESSADO, NOTIFICADO
