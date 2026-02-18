@@ -19,7 +19,7 @@ public class NotificationQueueFunction {
     @Inject
     NotificationService notificationService;
 
-@FunctionName("NotificacaoQueueFunction")
+@FunctionName("NotificationQueueFunction")
     public void processarNotificacao(
             @QueueTrigger(
                     name = "msg",
