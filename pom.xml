@@ -10,7 +10,7 @@
         <resourceGroup>functions-quarkus</resourceGroup>
         <functionAppName>function-quarkus-postech</functionAppName>
         <functionSubscriptionId>be0336b0-3f01-49e7-8df2-57bcacac231f</functionSubscriptionId>
-        <azure.functions.maven.plugin.version>1.22.0</azure.functions.maven.plugin.version>
+        <azure.functions.maven.plugin.version>1.36.0</azure.functions.maven.plugin.version>
 
         <compiler-plugin.version>3.14.1</compiler-plugin.version>
         <maven.compiler.release>21</maven.compiler.release>
