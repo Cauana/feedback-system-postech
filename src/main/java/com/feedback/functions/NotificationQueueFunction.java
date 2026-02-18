@@ -9,9 +9,9 @@ import jakarta.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NotificationHttpFunction {
+public class NotificationQueueFunction {
 
-    private static final Logger log = LoggerFactory.getLogger(NotificationHttpFunction.class);
+    private static final Logger log = LoggerFactory.getLogger(NotificationQueueFunction.class);
 
     @Inject
     ObjectMapper mapper;
@@ -19,7 +19,7 @@ public class NotificationHttpFunction {
     @Inject
     NotificationService notificationService;
 
-@FunctionName("NotificacaoHttpFunction")
+@FunctionName("NotificationQueueFunction")
     public void processarNotificacao(
             @QueueTrigger(
                     name = "msg",

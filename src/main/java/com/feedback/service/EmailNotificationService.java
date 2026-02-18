@@ -24,6 +24,9 @@ public class EmailNotificationService implements NotificationService {
     
     @Inject
     Mailer mailer;
+
+    @Inject
+    MetricsService metricsService;
     
     @ConfigProperty(name = "notification.admin.email", defaultValue = "wellingtonfc@hotmail.com")
     String adminEmail;
@@ -40,7 +43,8 @@ public class EmailNotificationService implements NotificationService {
             String subject = "ALERTA: Feedback Crítico Recebido";
             String body = criarCorpoNotificacaoCritica(feedback);
             
-            enviarEmail(adminEmail, subject, body);
+            boolean success = enviarEmail(adminEmail, subject, body);
+            metricsService.recordNotificationSent("EMAIL", success);
             log.info("[notify] -> Email enviado com sucesso");
         }
     }
@@ -50,11 +54,12 @@ public class EmailNotificationService implements NotificationService {
         String subject = "Relatório Semanal de Feedbacks - " + report.dataCriacao;
         String body = criarCorpoRelatorio(report);
         
-        enviarEmail(adminEmail, subject, body);
+        boolean success = enviarEmail(adminEmail, subject, body);
+        metricsService.recordNotificationSent("EMAIL", success);
         log.info("[notifyReport] -> Email enviado com sucesso");
     }
 
-    private void enviarEmail(String destinatario, String assunto, String corpo) {
+    private boolean enviarEmail(String destinatario, String assunto, String corpo) {
         try {
             String to = destinatario == null ? "" : destinatario.trim();
             String from = emailFrom.filter(s -> !s.isBlank()).orElseGet(() -> emailUser.orElse("")).trim();
@@ -70,9 +75,12 @@ public class EmailNotificationService implements NotificationService {
             
             mailer.send(mail);
             log.info("[enviarEmail] -> Email enviado com sucesso para: " + to);
+            return true;
         } catch (Exception e) {
             log.error("[enviarEmail] -> Erro ao enviar email: " + e.getMessage());
+            metricsService.recordException(e.getClass().getSimpleName());
             e.printStackTrace();
+            return false;
         }
     }
     
