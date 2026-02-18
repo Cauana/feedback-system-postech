@@ -4,7 +4,7 @@ Este projeto é um sistema de feedback para cursos on-line, desenvolvido com Jav
 
 ## Pré-requisitos
 
-- Java 17+
+- Java 21+
 - Docker e Docker Compose
 - Maven (opcional, o wrapper `mvnw` está incluído)
 
@@ -72,9 +72,9 @@ O sistema possui uma tarefa agendada que roda a cada 1 minuto (para fins de demo
 - **HTTP Function (POST /feedbacks)**: [FeedbackHttpFunction.java](src/main/java/com/feedback/functions/FeedbackHttpFunction.java)
   - Recebe JSON do feedback e delega para `FeedbackService.processar`.
   - Retorna `201` com o feedback processado.
-- **Timer Function (a cada 1 minuto)**: [ReportTimerFunction.java](src/main/java/com/feedback/functions/ReportTimerFunction.java)
+- **Timer Function (a cada 1 semana)**: [ReportTimerFunction.java](src/main/java/com/feedback/functions/ReportTimerFunction.java)
   - Aciona `ReportService.gerarRelatorioPeriodico`.
 - **Porta HTTP**: respeita `PORT` quando definida pelo ambiente (ex.: Azure App Service/Functions).
-- **Notificações**: abstraídas em `NotificationService`. A implementação atual é de console; pode ser substituída por Azure Service Bus, e-mail ou outra integração.
+- **Notificações**: abstraídas em `NotificationService`. A implementação atual utiliza fila da azure (Azure Queue Storage) para envio de notificações.
 
 
