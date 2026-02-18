@@ -1,62 +1,80 @@
-# feedback-system-postech
+# Sistema de Feedback - PósTech
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+Este projeto é um sistema de feedback para cursos on-line, desenvolvido com Java, Quarkus e Docker. Ele foi projetado para ser executado localmente e preparado para implantação em ambiente Serverless (Azure Functions).
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+## Pré-requisitos
 
-## Running the application in dev mode
+- Java 17+
+- Docker e Docker Compose
+- Maven (opcional, o wrapper `mvnw` está incluído)
 
-You can run your application in dev mode that enables live coding using:
+## Executando Localmente
 
-```shell script
-./mvnw quarkus:dev
+1. **Inicie o Banco de Dados:**
+   Execute o comando abaixo para subir o container do PostgreSQL via Docker Compose.
+   ```bash
+   docker-compose up -d feedback-db
+   ```
+
+2. **Execute a Aplicação:**
+   Utilize o Maven Wrapper para iniciar a aplicação em modo de desenvolvimento (com Hot Reload).
+   ```bash
+   ./mvnw quarkus:dev
+   ```
+   A aplicação estará disponível em `http://localhost:8080`.
+
+### Configuração de Ambiente
+- Banco: `jdbc:postgresql://localhost:5433/feedback_db`
+- Usuário/Senha padrão: `feedback_user` / `feedback_password`
+- Variáveis suportadas:
+  - `DB_URL`, `DB_USER`, `DB_PASSWORD`
+  - `PORT` para definir a porta HTTP em ambientes gerenciados (ex.: Azure)
+
+## Endpoints
+
+### 1. Enviar Feedback
+**POST** `/feedbacks`
+```json
+{
+  "descricao": "O curso está excelente, mas o áudio do módulo 2 está baixo.",
+  "nota": 8
+}
 ```
+*Se a nota for menor ou igual a 3, o feedback é marcado como URGENTE e uma notificação é simulada no log.*
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+### 2. Listar Feedbacks
+**GET** `/feedbacks`
 
-## Packaging and running the application
+### 3. Dashboard
+**GET** `/feedbacks/dashboard`
 
-The application can be packaged using:
+### Health
+- **GET** `/q/health` (geral)
+- **GET** `/q/health/live` (liveness)
+- **GET** `/q/health/ready` (readiness)
 
-```shell script
-./mvnw package
-```
+## Relatórios Periódicos
+O sistema possui uma tarefa agendada que roda a cada 1 minuto (para fins de demonstração) e imprime um relatório no console da aplicação.
 
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+## Arquitetura e Cloud
+- **Quarkus**: Framework Java Cloud Native.
+- **PostgreSQL**: Banco de dados relacional.
+- **Azure Functions**: O projeto utiliza a extensão `quarkus-azure-functions-http`, permitindo que a mesma aplicação JAX-RS seja implantada como uma Azure Function sem alterações no código.
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
+## Testes com Postman
+1. Importe a coleção: `feedback-system.postman_collection.json`.
+2. Execute:
+   - "Criar Feedback (Normal)" → valida `status=PROCESSADO` e `urgencia=false`.
+   - "Criar Feedback (Crítico)" → valida `status=NOTIFICADO` e `urgencia=true`.
+3. "Listar Feedbacks" e "Dashboard" conferem listagem e estatísticas.
 
-If you want to build an _über-jar_, execute the following command:
+## Azure Functions (Serverless)
+- **HTTP Function (POST /feedbacks)**: [FeedbackHttpFunction.java](src/main/java/com/feedback/functions/FeedbackHttpFunction.java)
+  - Recebe JSON do feedback e delega para `FeedbackService.processar`.
+  - Retorna `201` com o feedback processado.
+- **Timer Function (a cada 1 minuto)**: [ReportTimerFunction.java](src/main/java/com/feedback/functions/ReportTimerFunction.java)
+  - Aciona `ReportService.gerarRelatorioPeriodico`.
+- **Porta HTTP**: respeita `PORT` quando definida pelo ambiente (ex.: Azure App Service/Functions).
+- **Notificações**: abstraídas em `NotificationService`. A implementação atual é de console; pode ser substituída por Azure Service Bus, e-mail ou outra integração.
 
-```shell script
-./mvnw package -Dquarkus.package.jar.type=uber-jar
-```
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
-
-## Creating a native executable
-
-You can create a native executable using:
-
-```shell script
-./mvnw package -Dnative
-```
-
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
-
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
-```
-
-You can then execute your native executable with: `./target/feedback-system-postech-1.0.0-SNAPSHOT-runner`
-
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
-
-## Provided Code
-
-### REST
-
-Easily start your REST Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)

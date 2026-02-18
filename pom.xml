@@ -6,6 +6,12 @@
     <version>1.0.0-SNAPSHOT</version>
 
     <properties>
+        <!-- Azure -->
+        <resourceGroup>functions-quarkus</resourceGroup>
+        <functionAppName>function-quarkus-postech</functionAppName>
+        <functionSubscriptionId>be0336b0-3f01-49e7-8df2-57bcacac231f</functionSubscriptionId>
+        <azure.functions.maven.plugin.version>1.22.0</azure.functions.maven.plugin.version>
+
         <compiler-plugin.version>3.14.1</compiler-plugin.version>
         <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -15,6 +21,11 @@
         <quarkus.platform.version>3.31.1</quarkus.platform.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.5.4</surefire-plugin.version>
+
+        <!-- Build -->
+        <stagingDirectory>
+            ${project.build.directory}/azure-functions/${functionAppName}
+        </stagingDirectory>
     </properties>
 
     <dependencyManagement>
@@ -24,6 +35,13 @@
                 <artifactId>${quarkus.platform.artifact-id}</artifactId>
                 <version>${quarkus.platform.version}</version>
                 <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.azure</groupId>
+                <artifactId>azure-sdk-bom</artifactId>
+                <version>1.2.31</version> <type>pom</type>
                 <scope>import</scope>
             </dependency>
         </dependencies>
@@ -36,11 +54,39 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-rest</artifactId>
+            <artifactId>quarkus-rest-jackson</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-junit5</artifactId>
+            <artifactId>quarkus-hibernate-orm-panache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-postgresql</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-h2</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-funqy-http</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-azure-functions-http</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-scheduler</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-mailer</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-junit</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -48,18 +94,62 @@
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Quarkus Azure Functions HTTP -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-azure-functions-http</artifactId>
+        </dependency>
+
+        <!-- Quarkus Funqy -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-funqy-http</artifactId>
+        </dependency>
+
         <!-- Azure Functions -->
         <dependency>
             <groupId>com.microsoft.azure.functions</groupId>
             <artifactId>azure-functions-java-library</artifactId>
-            <version>3.0.0</version>
+            <version>3.1.0</version>
         </dependency>
 
         <!-- JSON -->
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
+
+        <!-- Banco de Dados -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-hibernate-orm-panache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-postgresql</artifactId>
+        </dependency>
+
+        <!-- E-mail -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-mailer</artifactId>
+        </dependency>
+
+        <!-- Scheduler para relatórios agendados -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-scheduler</artifactId>
+        </dependency>
+
+        <!-- Fila -->
+            <dependency>
+                <groupId>com.azure</groupId>
+                <artifactId>azure-storage-queue</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>com.azure</groupId>
+                <artifactId>azure-identity</artifactId>
+            </dependency>
     </dependencies>
 
     <build>
@@ -87,11 +177,68 @@
                     <parameters>true</parameters>
                 </configuration>
             </plugin>
+
+            <!-- Azure Functions Maven Plugin (somente para deploy) -->
+            <plugin>
+                <groupId>com.microsoft.azure</groupId>
+                <artifactId>azure-functions-maven-plugin</artifactId>
+                <version>${azure.functions.maven.plugin.version}</version>
+                <configuration>
+                    <auth>
+                        <type>azure_cli</type>
+                    </auth>
+
+                    <appName>${functionAppName}</appName>
+                    <resourceGroup>${resourceGroup}</resourceGroup>
+                    <subscriptionId>${functionSubscriptionId}</subscriptionId>
+                    <region>canadacentral</region>
+
+                    <runtime>
+                        <os>windows</os>
+                        <javaVersion>21</javaVersion>
+                    </runtime>
+
+                    <appSettings>
+                        <!-- Banco de Dados -->
+                        <property>
+                            <name>QUARKUS_DATASOURCE_DB_KIND</name>
+                            <value>postgresql</value>
+                        </property>
+                        <property>
+                            <name>QUARKUS_DATASOURCE_USERNAME</name>
+                            <value>postech</value>
+                        </property>
+                        <property>
+                            <name>QUARKUS_DATASOURCE_PASSWORD</name>
+                            <value>Fiap@2026</value>
+                        </property>
+                        <property>
+                            <name>QUARKUS_DATASOURCE_JDBC_URL</name>
+                            <value>jdbc:postgresql://postgres-tech-db.postgres.database.azure.com:5432/postgres</value>
+                        </property>
+                        <!-- Hibernate -->
+                        <property>
+                            <name>QUARKUS_HIBERNATE_ORM_DATABASE_GENERATION</name>
+                            <value>update</value>
+                        </property>
+                        <!-- E-mail -->
+                        <property>
+                            <name>QUARKUS_MAILER_MOCK</name>
+                            <value>false</value>
+                        </property>
+                        <property>
+                            <name>ADMIN_EMAIL</name>
+                            <value>admin@example.com</value>
+                        </property>
+                    </appSettings>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire-plugin.version}</version>
                 <configuration>
-                    <argLine>--add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+                    <argLine>@{argLine} --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
                     <systemPropertyVariables>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
                         <maven.home>${maven.home}</maven.home>
@@ -110,7 +257,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <argLine>--add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+                    <argLine>@{argLine} --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
                     <systemPropertyVariables>
                         <native.image.path>${project.build.directory}/${project.build.finalName}-runner</native.image.path>
                         <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
