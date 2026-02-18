@@ -1,12 +1,29 @@
-# Sistema de Feedback - PósTech
+# Sistema de Feedback - PósTech (Azure Serverless)
 
-Este projeto é um sistema de feedback para cursos on-line, desenvolvido com Java, Quarkus e Docker. Ele foi projetado para ser executado localmente e preparado para implantação em ambiente Serverless (Azure Functions).
+Este projeto consiste em um ecossistema de feedback para cursos on-line, construído com Java 21 e Quarkus. A arquitetura é totalmente baseada no modelo Serverless, utilizando Azure Functions para processamento orientado a eventos, garantindo escalabilidade automática e baixo custo operacional.
+
+
+## 🏗️ Arquitetura e Fluxo de Dados
+O sistema opera de forma orientada a eventos, integrando serviços nativos da Microsoft Azure localizados no grupo de recursos rg-fiap-postech:
+- Ingestão (FeedbackHttpFunction): Recebe feedbacks via API REST (HTTP Trigger).
+- Mensageria (Azure Queue Storage): Se um feedback é classificado como crítico (nota ≤ 3), ele é enviado para a conta de armazenamento tc4postech na fila feedback-critico.
+- Processamento de Alerta (NotificationQueueFunction): Esta função é disparada automaticamente ao detectar uma nova mensagem na fila. Ela processa o feedback e realiza o envio imediato de um e-mail via SMTP para a equipe de suporte.
+- Relatórios (ReportTimerFunction): Uma função temporizada (Timer Trigger) que, semanalmente, consolida os dados do banco e envia um relatório gerencial por e-mail via SMTP.
+
+## 🛠️ Tecnologias e Recursos Azure
+O projeto utiliza os seguintes recursos configurados no grupo de recursos rg-fiap-postech:
+- Runtime: Java 21 (Quarkus Framework).
+- Serviço de Computação: Azure Function App functions-tc-postech.
+- Banco de Dados: Azure Database for PostgreSQL (Servidor Flexível) db-postech.
+- Mensageria/Storage: Azure Storage Account tc4postech com a fila feedback-critico.
+- CI/CD: Autodeploy configurado via GitHub Actions.
 
 ## Pré-requisitos
 
-- Java 17+
+- Java 21+
 - Docker e Docker Compose
 - Maven (opcional, o wrapper `mvnw` está incluído)
+- Azure CLI (opcional, para deploys manuais).
 
 ## Executando Localmente
 
@@ -54,12 +71,8 @@ Este projeto é um sistema de feedback para cursos on-line, desenvolvido com Jav
 - **GET** `/q/health/ready` (readiness)
 
 ## Relatórios Periódicos
-O sistema possui uma tarefa agendada que roda a cada 1 minuto (para fins de demonstração) e imprime um relatório no console da aplicação.
+O sistema possui uma tarefa agendada que roda a cada 7 dias e disdara o envio desse relatório para o email do administrador.
 
-## Arquitetura e Cloud
-- **Quarkus**: Framework Java Cloud Native.
-- **PostgreSQL**: Banco de dados relacional.
-- **Azure Functions**: O projeto utiliza a extensão `quarkus-azure-functions-http`, permitindo que a mesma aplicação JAX-RS seja implantada como uma Azure Function sem alterações no código.
 
 ## Testes com Postman
 1. Importe a coleção: `feedback-system.postman_collection.json`.
@@ -72,9 +85,9 @@ O sistema possui uma tarefa agendada que roda a cada 1 minuto (para fins de demo
 - **HTTP Function (POST /feedbacks)**: [FeedbackHttpFunction.java](src/main/java/com/feedback/functions/FeedbackHttpFunction.java)
   - Recebe JSON do feedback e delega para `FeedbackService.processar`.
   - Retorna `201` com o feedback processado.
-- **Timer Function (a cada 1 minuto)**: [ReportTimerFunction.java](src/main/java/com/feedback/functions/ReportTimerFunction.java)
+- **Timer Function (a cada 1 semana)**: [ReportTimerFunction.java](src/main/java/com/feedback/functions/ReportTimerFunction.java)
   - Aciona `ReportService.gerarRelatorioPeriodico`.
+- **Queue Function (a cada 1 semana)**: [NotificationQueueFunction.java](src/main/java/com/feedback/functions/NotificationQueueFunction.java)
+- Aciona `NotificationService.notify`.
+- A implementação atual utiliza fila da azure (Azure Queue Storage) para envio de notificações.
 - **Porta HTTP**: respeita `PORT` quando definida pelo ambiente (ex.: Azure App Service/Functions).
-- **Notificações**: abstraídas em `NotificationService`. A implementação atual é de console; pode ser substituída por Azure Service Bus, e-mail ou outra integração.
-
-

@@ -17,7 +17,7 @@ import java.util.Optional;
 
 public class FeedbackHttpFunction {
 
-    private static final Logger log = LoggerFactory.getLogger(NotificationHttpFunction.class);
+    private static final Logger log = LoggerFactory.getLogger(FeedbackHttpFunction.class);
 
     @Inject
     private FeedbackService feedbackService;
