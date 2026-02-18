@@ -28,7 +28,7 @@ jobs:
         # Na Azure, as "Application Settings" reais sobrescreverão esses valores.
         run: |
           mvn clean package
-          mvn azure-functions:deploy \
+          mvn quarkus:deploy \
             -Dquarkus.datasource.db-kind=postgresql \
             -Dquarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/build_db \
             -Dquarkus.datasource.username=build_user \
