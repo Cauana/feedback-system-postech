@@ -28,6 +28,9 @@ public class ReportService {
     @Inject
     NotificationService notificationService;
 
+    @Inject
+    MetricsService metricsService;
+
     /**
      * Gera relatório semanal dos feedbacks
      * Agendado para rodar toda segunda-feira
@@ -35,6 +38,8 @@ public class ReportService {
     @Scheduled(cron = "0 0 0 ? * MON") // Segunda-feira às 00:00
     @Transactional
     public void gerarRelatorioPeriodico() {
+        long startTime = System.currentTimeMillis();
+        
         try {
             // 1. Buscar feedbacks da última semana
             LocalDateTime umaSemanaAtras = LocalDateTime.now().minus(7, ChronoUnit.DAYS);
@@ -53,12 +58,19 @@ public class ReportService {
             // 3. Salvar relatório no BD
             Report relatorio = criarRelatorio(estatisticas, feedbacksSemana);
             
-            // 4. Enviar notificação aos administradores
+            // 4. Registrar métricas
+            long criticalCount = (long) estatisticas.get("feedbacksCriticos");
+            double avgRating = (double) estatisticas.get("mediaNota");
+            metricsService.recordReportGenerated(feedbacksSemana.size(), System.currentTimeMillis() - startTime);
+            metricsService.recordFeedbackStatistics(relatorio.totalFeedbacks, avgRating, criticalCount);
+            
+            // 5. Enviar notificação aos administradores
             notificarAdministradores(relatorio);
 
             log.info("[gerarRelatorioPeriodico] -> ✓ Relatório semanal gerado e notificado com sucesso. ");
             
         } catch (Exception e) {
+            metricsService.recordException(e.getClass().getSimpleName());
             log.error("[gerarRelatorioPeriodico] -> Erro ao gerar relatório: {}", e.getMessage());
             e.printStackTrace();
         }
