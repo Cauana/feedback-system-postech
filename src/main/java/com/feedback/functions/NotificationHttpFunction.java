@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 public class NotificationHttpFunction {
 
     private static final Logger log = LoggerFactory.getLogger(NotificationHttpFunction.class);
+
     @Inject
     ObjectMapper mapper;
 
@@ -29,8 +30,9 @@ public class NotificationHttpFunction {
         try {
             Feedback feedback = mapper.readValue(messageContent, Feedback.class);
             notificationService.notify(feedback);
+            log.info("[processarNotificacao] -> Notificação finalizada. Feedback descrição: " + feedback.descricao);
         }catch (Exception ex){
-            log.error("Erro ao processar mensagem da fila: " + ex.getMessage());
+            log.error("[processarNotificacao] -> Erro ao processar mensagem da fila: " + ex.getMessage());
         }
     
     }

@@ -6,6 +6,9 @@ import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -20,9 +23,8 @@ import java.util.Map;
 @ApplicationScoped
 public class ReportService {
 
-    @Inject
-    FeedbackService feedbackService;
-    
+    private static final Logger log = LoggerFactory.getLogger(ReportService.class);
+
     @Inject
     NotificationService notificationService;
 
@@ -41,7 +43,7 @@ public class ReportService {
                 .list();
 
             if (feedbacksSemana.isEmpty()) {
-                System.out.println("Nenhum feedback na última semana");
+                log.error("[gerarRelatorioPeriodico] -> Nenhum feedback encontrado na última semana");
                 return;
             }
 
@@ -53,12 +55,11 @@ public class ReportService {
             
             // 4. Enviar notificação aos administradores
             notificarAdministradores(relatorio);
-            
-            System.out.println("✓ Relatório semanal gerado com sucesso!");
-            System.out.println(formatarRelatorio(relatorio));
+
+            log.info("[gerarRelatorioPeriodico] -> ✓ Relatório semanal gerado e notificado com sucesso. ");
             
         } catch (Exception e) {
-            System.err.println("✗ Erro ao gerar relatório: " + e.getMessage());
+            log.error("[gerarRelatorioPeriodico] -> Erro ao gerar relatório: {}", e.getMessage());
             e.printStackTrace();
         }
     }
@@ -99,6 +100,7 @@ public class ReportService {
             .filter(f -> f.urgencia)
             .count();
         stats.put("porUrgencia", porUrgencia);
+        log.info("[calcularEstatisticas] -> Estatísticas calculadas com sucesso");
         
         return stats;
     }
@@ -123,7 +125,9 @@ public class ReportService {
         );
         relatorio.detalhesJson = sb.toString();
         relatorio.status = "GERADO";
-        
+        log.info("[criarRelatorio] -> Relatório criado com sucesso");
+
+
         relatorio.persist();
         return relatorio;
     }

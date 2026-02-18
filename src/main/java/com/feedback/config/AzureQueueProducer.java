@@ -1,4 +1,4 @@
-package com.feedback.functions;
+package com.feedback.config;
 
 
 import com.azure.storage.queue.QueueClient;

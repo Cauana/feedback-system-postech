@@ -7,6 +7,9 @@ import io.quarkus.mailer.Mailer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Optional;
 
 /**
@@ -16,6 +19,8 @@ import java.util.Optional;
  */
 @ApplicationScoped
 public class EmailNotificationService implements NotificationService {
+
+    private static final Logger log = LoggerFactory.getLogger(EmailNotificationService.class);
     
     @Inject
     Mailer mailer;
@@ -36,6 +41,7 @@ public class EmailNotificationService implements NotificationService {
             String body = criarCorpoNotificacaoCritica(feedback);
             
             enviarEmail(adminEmail, subject, body);
+            log.info("[notify] -> Email enviado com sucesso");
         }
     }
     
@@ -45,8 +51,9 @@ public class EmailNotificationService implements NotificationService {
         String body = criarCorpoRelatorio(report);
         
         enviarEmail(adminEmail, subject, body);
+        log.info("[notifyReport] -> Email enviado com sucesso");
     }
-    
+
     private void enviarEmail(String destinatario, String assunto, String corpo) {
         try {
             String to = destinatario == null ? "" : destinatario.trim();
@@ -62,9 +69,9 @@ public class EmailNotificationService implements NotificationService {
             }
             
             mailer.send(mail);
-            System.out.println("Email enviado com sucesso para: " + to);
+            log.info("[enviarEmail] -> Email enviado com sucesso para: " + to);
         } catch (Exception e) {
-            System.err.println("Erro ao enviar email: " + e.getMessage());
+            log.error("[enviarEmail] -> Erro ao enviar email: " + e.getMessage());
             e.printStackTrace();
         }
     }

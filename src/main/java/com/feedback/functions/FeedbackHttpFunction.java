@@ -2,18 +2,23 @@ package com.feedback.functions;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.feedback.model.Feedback;
 import com.feedback.service.FeedbackService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.*;
-import com.microsoft.azure.functions.annotation.*;
-import io.quarkus.arc.Arc;
-import io.quarkus.funqy.Funq;
+import com.microsoft.azure.functions.annotation.AuthorizationLevel;
+import com.microsoft.azure.functions.annotation.FunctionName;
+import com.microsoft.azure.functions.annotation.HttpTrigger;
 import jakarta.inject.Inject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
 public class FeedbackHttpFunction {
+
+    private static final Logger log = LoggerFactory.getLogger(NotificationHttpFunction.class);
+
     @Inject
     private FeedbackService feedbackService;
 
@@ -31,6 +36,7 @@ public class FeedbackHttpFunction {
             final ExecutionContext context) {
 
         context.getLogger().info("Processando novo feedback.");
+        log.info("Recebendo requisição HTTP para criar feedback.");
         try {
             String body = request.getBody().get();
             if (body.isBlank()){
@@ -43,6 +49,8 @@ public class FeedbackHttpFunction {
             Feedback result = feedbackService.processar(input);
 
             String jsonResponse = mapper.writeValueAsString(result);
+
+            log.info("Feedback processado com sucesso. Descrição: " + result.descricao);
 
             return request.createResponseBuilder(HttpStatus.CREATED)
                     .header("Content-Type", "application/json")

@@ -39,28 +39,31 @@ public class FeedbackService {
 
             if (feedback.urgencia) {
                 queueClient.sendMessage(jsonFeedback);
-                log.info("Feedback critico enviado para a fila com sucesso");
+                log.info("[processar] -> Feedback crítico enviado para a fila com sucesso");
                 feedback.status = "NOTIFICADO";
             }
 
         }
         catch (JsonProcessingException e)
         {
-            log.error("Erro ao converter feedback para JSON: " + e.getMessage());
+            log.error("[processar] -> Erro ao converter feedback para JSON: " + e.getMessage());
         }
 
         return feedback;
     }
 
     public List<Feedback> listarTodos() {
+        log.info("[listarTodos] -> Listando todos os feedbacks. Total: " + Feedback.count());
         return Feedback.listAll();
     }
 
     public long contarTotal() {
+        log.info("[contarTotal] -> Contando total de feedbacks. Total: " + Feedback.count());
         return Feedback.count();
     }
 
     public long contarCriticos() {
+        log.info("[contarCriticos] -> Contando feedbacks críticos. Total: " + Feedback.count("urgencia", true));
         return Feedback.count("urgencia", true);
     }
 }
