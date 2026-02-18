@@ -16,15 +16,20 @@
 
     "QUARKUS_HTTP_ROOT_PATH": "/api",
 
-    "QUARKUS_MAILER_FROM": "fdolzanes1@gmail.com",
-    "QUARKUS_MAILER_HOST": "smtp.gmail.com",
+    "EMAIL_FROM": "fdolzanes1@gmail.com",
+    "EMAIL_HOST": "smtp.gmail.com",
     "QUARKUS_MAILER_PORT": "587",
     "QUARKUS_MAILER_START_TLS": "REQUIRED",
-    "SMTP_USERNAME": "seu-email@gmail.com",
-    "SMTP_PASSWORD": "sua-senha-app",
+    "EMAIL_USER": "seu-email@gmail.com",
+    "EMAIL_PASS": "sua-senha-app",
     "QUARKUS_MAILER_MOCK": "false",
 
-    "ADMIN_EMAIL": "admin@example.com"
+    "NOTIFICATION_ADMIN_EMAIL": "admin@example.com",
+
+    "QUEUE_NAME": "feedback-critico",
+    "QUEUE_CONNECTION_STRING": "string-conexao-fila-azure",
+    "REPORT_GENERATION_SCHEDULE": "0 */2 * * * *"
+
   },
   "Host": {
     "CORS": "*",
