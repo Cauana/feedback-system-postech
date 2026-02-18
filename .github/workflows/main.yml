@@ -27,7 +27,8 @@ jobs:
         # Passamos propriedades fictícias do datasource apenas para satisfazer o Quarkus no build.
         # Na Azure, as "Application Settings" reais sobrescreverão esses valores.
         run: |
-          mvn clean package azure-functions:deploy \
+          mvn clean package
+          mvn azure-functions:deploy \
             -Dquarkus.datasource.db-kind=postgresql \
             -Dquarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/build_db \
             -Dquarkus.datasource.username=build_user \
