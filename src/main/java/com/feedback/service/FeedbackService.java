@@ -17,6 +17,7 @@ import java.util.List;
 public class FeedbackService {
 
     private static final Logger log = LoggerFactory.getLogger(FeedbackService.class);
+    
     @Inject
     NotificationService notificationService;
 
@@ -26,30 +27,51 @@ public class FeedbackService {
     @Inject
     ObjectMapper objectMapper;
 
+    @Inject
+    MetricsService metricsService;
+
     @Transactional
     public Feedback processar(Feedback feedback)  {
-        feedback.dataEnvio = LocalDateTime.now();
-        feedback.urgencia = feedback.nota <= 3;
-        feedback.status = "PROCESSADO";
-        feedback.persist();
+        long startTime = System.currentTimeMillis();
+        
+        try {
+            feedback.dataEnvio = LocalDateTime.now();
+            feedback.urgencia = feedback.nota <= 3;
+            feedback.status = "PROCESSADO";
+            feedback.persist();
 
-        try
-        {
-            String jsonFeedback = objectMapper.writeValueAsString(feedback);
-
+            // Registrar métrica de feedback criado
+            metricsService.recordFeedbackCreated(feedback.nota, feedback.urgencia);
+            
             if (feedback.urgencia) {
-                queueClient.sendMessage(jsonFeedback);
-                log.info("[processar] -> Feedback crítico enviado para a fila com sucesso");
-                feedback.status = "NOTIFICADO";
+                metricsService.recordCriticalFeedback();
             }
 
-        }
-        catch (JsonProcessingException e)
-        {
-            log.error("[processar] -> Erro ao converter feedback para JSON: " + e.getMessage());
-        }
+            try {
+                String jsonFeedback = objectMapper.writeValueAsString(feedback);
 
-        return feedback;
+                if (feedback.urgencia) {
+                    queueClient.sendMessage(jsonFeedback);
+                    log.info("[processar] -> Feedback crítico enviado para a fila com sucesso");
+                    feedback.status = "NOTIFICADO";
+                }
+            } catch (JsonProcessingException e) {
+                log.error("[processar] -> Erro ao converter feedback para JSON: " + e.getMessage());
+                metricsService.recordException(e.getClass().getSimpleName());
+                throw e;
+            }
+
+            long duration = System.currentTimeMillis() - startTime;
+            metricsService.recordFeedbackProcessed(duration, "SUCCESS");
+
+            return feedback;
+        } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            metricsService.recordFeedbackProcessed(duration, "ERROR");
+            metricsService.recordException(e.getClass().getSimpleName());
+            log.error("[processar] -> Erro ao processar feedback", e);
+            throw new RuntimeException("Erro ao processar feedback", e);
+        }
     }
 
     public List<Feedback> listarTodos() {
